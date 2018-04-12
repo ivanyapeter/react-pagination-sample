@@ -1,4 +1,5 @@
 import React from 'react';
+import { compose } from 'recompose';
 
 import './App.css';
 
@@ -65,7 +66,7 @@ class App extends React.Component {
           </form>
         </div>
 
-        <List
+        <ListWithLoadingWithPaginated
           list={this.state.hits}
           page={this.state.page}
           isLoading={this.state.isLoading}
@@ -76,29 +77,42 @@ class App extends React.Component {
   }
 }
 
-const List = ({ list, page, isLoading, onPaginatedSearch }) =>
+const List = ({ list }) =>
+  <div className="list">
+    {list.map(item => <div className="list-row" key={item.objectID}>
+      <a href={item.url}>{item.title}</a>
+    </div>)}
+  </div>
+
+const withLoading = (Component) => (props) =>
   <div>
-    <div className="list">
-      {list.map(item => <div className="list-row" key={item.objectID}>
-        <a href={item.url}>{item.title}</a>
-      </div>)}
-    </div>
+    <Component {...props} />
 
     <div className="interactions">
-      {isLoading && <span>Loading...</span>}
+      {props.isLoading && <span>Loading...</span>}
     </div>
+  </div>
+
+const withPaginated = (Component) => (props) =>
+  <div>
+    <Component {...props} />
 
     <div className="interactions">
       {
-        (page !== null && !isLoading) &&
+        (props.page !== null && !props.isLoading) &&
         <button
           type="button"
-          onClick={onPaginatedSearch}
+          onClick={props.onPaginatedSearch}
         >
           More
         </button>
       }
     </div>
   </div>
+
+const ListWithLoadingWithPaginated = compose(
+  withPaginated,
+  withLoading,
+)(List);
 
 export default App;
