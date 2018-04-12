@@ -66,7 +66,7 @@ class App extends React.Component {
           </form>
         </div>
 
-        <ListWithLoadingWithPaginated
+        <ListWithLoadingWithInfinite
           list={this.state.hits}
           page={this.state.page}
           isLoading={this.state.isLoading}
@@ -77,35 +77,12 @@ class App extends React.Component {
   }
 }
 
-class List extends React.Component {
-  componentDidMount() {
-    window.addEventListener('scroll', this.onScroll, false);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('scroll', this.onScroll, false);
-  }
-
-  onScroll = () => {
-    if (
-      (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500) &&
-      this.props.list.length
-    ) {
-      this.props.onPaginatedSearch();
-    }
-  }
-  
-  render() {
-    const { list } = this.props;
-    return (
-      <div className="list">
-        {list.map(item => <div className="list-row" key={item.objectID}>
-          <a href={item.url}>{item.title}</a>
-        </div>)}
-      </div>
-    );
-  };
-}
+const List = ({ list }) =>
+  <div className="list">
+    {list.map(item => <div className="list-row" key={item.objectID}>
+      <a href={item.url}>{item.title}</a>
+    </div>)}
+  </div>
 
 const withLoading = (Component) => (props) =>
   <div>
@@ -133,8 +110,37 @@ const withPaginated = (Component) => (props) =>
     </div>
   </div>
 
+const withInfiniteScroll = (Component) =>
+  class WithInfiniteScroll extends React.Component {
+    componentDidMount() {
+      window.addEventListener('scroll', this.onScroll, false);
+    }
+
+    componentWillUnmount() {
+      window.removeEventListener('scroll', this.onScroll, false);
+    }
+
+    onScroll = () => {
+      if (
+        (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500) &&
+        this.props.list.length
+      ) {
+        this.props.onPaginatedSearch();
+      }
+    }
+
+    render() {
+      return <Component {...this.props} />;
+    }
+  }
+
 const ListWithLoadingWithPaginated = compose(
   withPaginated,
+  withLoading,
+)(List);
+
+const ListWithLoadingWithInfinite = compose(
+  withInfiniteScroll,
   withLoading,
 )(List);
 
