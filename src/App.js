@@ -35,9 +35,15 @@ class App extends React.Component {
       isError: false,
       isLoading: false,
     };
+
+    this.onInitialSearch = this.onInitialSearch.bind(this);
+    this.onPaginatedSearch = this.onPaginatedSearch.bind(this);
+    this.fetchStories = this.fetchStories.bind(this);
+    this.onSetError = this.onSetError.bind(this);
+    this.onSetResult = this.onSetResult.bind(this);
   }
 
-  onInitialSearch = (e) => {
+  onInitialSearch(e) {
     e.preventDefault();
 
     const { value } = this.input;
@@ -49,10 +55,11 @@ class App extends React.Component {
     this.fetchStories(value, 0);
   }
 
-  onPaginatedSearch = (e) =>
+  onPaginatedSearch(e) {
     this.fetchStories(this.input.value, this.state.page + 1);
+  }
 
-  fetchStories = (value, page) => {
+  fetchStories(value, page) {
     this.setState({ isLoading: true });
     fetch(getHackerNewsUrl(value, page))
       .then(response => response.json())
@@ -60,13 +67,15 @@ class App extends React.Component {
       .catch(this.onSetError);
   }
 
-  onSetError = () =>
+  onSetError() {
     this.setState(applySetError);
+  }
 
-  onSetResult = (result, page) =>
+  onSetResult(result, page) {
     page === 0
       ? this.setState(applySetResult(result))
       : this.setState(applyUpdateResult(result));
+  }
 
   render() {
     return (
