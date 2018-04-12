@@ -6,12 +6,19 @@ import './App.css';
 const applyUpdateResult = (result) => (prevState) => ({
   hits: [...prevState.hits, ...result.hits],
   page: result.page,
+  isError: false,
   isLoading: false,
 });
 
 const applySetResult = (result) => (prevState) => ({
   hits: result.hits,
   page: result.page,
+  isError: false,
+  isLoading: false,
+});
+
+const applySetError = (prevState) => ({
+  isError: true,
   isLoading: false,
 });
 
@@ -25,6 +32,7 @@ class App extends React.Component {
     this.state = {
       hits: [],
       page: null,
+      isError: false,
       isLoading: false,
     };
   }
@@ -48,8 +56,12 @@ class App extends React.Component {
     this.setState({ isLoading: true });
     fetch(getHackerNewsUrl(value, page))
       .then(response => response.json())
-      .then(result => this.onSetResult(result, page));
+      .then(result => this.onSetResult(result, page))
+      .catch(this.onSetError);
   }
+
+  onSetError = () =>
+    this.setState(applySetError);
 
   onSetResult = (result, page) =>
     page === 0
@@ -66,9 +78,10 @@ class App extends React.Component {
           </form>
         </div>
 
-        <ListWithLoadingWithInfinite
+        <AdvancedList
           list={this.state.hits}
           page={this.state.page}
+          isError={this.state.isError}
           isLoading={this.state.isLoading}
           onPaginatedSearch={this.onPaginatedSearch}
         />
@@ -99,13 +112,18 @@ const withPaginated = (Component) => (props) =>
 
     <div className="interactions">
       {
-        (props.page !== null && !props.isLoading) &&
-        <button
-          type="button"
-          onClick={props.onPaginatedSearch}
-        >
-          More
-        </button>
+        (props.page !== null && !props.isLoading && props.isError) &&
+        <div>
+          <div>
+            Something went wrong...
+          </div>
+          <button
+            type="button"
+            onClick={props.onPaginatedSearch}
+          >
+            Try Again
+          </button>
+        </div>
       }
     </div>
   </div>
@@ -124,7 +142,8 @@ const withInfiniteScroll = (Component) =>
       if (
         (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500) &&
         this.props.list.length &&
-        !this.props.isLoading
+        !this.props.isLoading &&
+        !this.props.isError
       ) {
         this.props.onPaginatedSearch();
       }
@@ -141,6 +160,12 @@ const ListWithLoadingWithPaginated = compose(
 )(List);
 
 const ListWithLoadingWithInfinite = compose(
+  withInfiniteScroll,
+  withLoading,
+)(List);
+
+const AdvancedList = compose(
+  withPaginated,
   withInfiniteScroll,
   withLoading,
 )(List);
